@@ -11,8 +11,9 @@ struct Monitor {
 	wallpaper: String,
 }
 
-fn usage() {
+fn usage() -> Result<(), windows::Error> {
 	println!("usage: blablabla");
+	Ok(())
 }
 
 fn get_monitors() -> Result<Vec<Monitor>, windows::Error> {
@@ -36,16 +37,19 @@ fn get_monitors() -> Result<Vec<Monitor>, windows::Error> {
 	Ok(monitors)
 }
 
-fn print_monitor(monitor: &Monitor) {
+fn print_monitor(monitor: &Monitor) -> Result<(), windows::Error> {
 	println!("{}", monitor.index);
-	println!("\t{}", monitor.monitor_id);
-	println!("\t{}", monitor.wallpaper);
+	println!("  {}", monitor.monitor_id);
+	println!("  {}", monitor.wallpaper);
+	println!("");
+	Ok(())
 }
 
-fn print_monitors(monitors: &Vec<Monitor>) {
+fn print_monitors(monitors: &Vec<Monitor>) -> Result<(), windows::Error> {
 	for i in 0..monitors.len() {
-		print_monitor(&monitors[i]);
+		print_monitor(&monitors[i])?;
 	}
+	Ok(())
 }
 
 fn set_wallpaper(monitor: &Monitor, path: &String) -> Result<(), windows::Error> {
@@ -56,46 +60,58 @@ fn set_wallpaper(monitor: &Monitor, path: &String) -> Result<(), windows::Error>
 	Ok(())
 }
 
+fn ls(monitors: &Vec<Monitor>) -> Result<(), windows::Error> {
+	print_monitors(monitors)
+}
+
+fn get(monitors: &Vec<Monitor>, args: &Vec<String>) -> Result<(), windows::Error> {
+	if args.len() < 3 {
+		return usage();
+	}
+
+	return match args[2].parse::<usize>() {
+		Ok(x) => print_monitor(&monitors[x]),
+		Err(_) => usage(),
+	};
+}
+
+fn set(monitors: &Vec<Monitor>, args: &Vec<String>) -> Result<(), windows::Error> {
+	if args.len() < 3 {
+		return usage();
+	}
+
+	return match args[2].parse::<usize>() {
+		Ok(x) => {
+			if args.len() >= 4 && std::path::Path::new(&args[3]).exists() {
+				return set_wallpaper(&monitors[x], &args[3]);
+			} else {
+				return usage();
+			}
+		}
+		Err(_) => usage(),
+	};
+}
+
 fn main() -> windows::Result<()> {
 	let args: Vec<String> = std::env::args().collect();
 
 	if args.len() < 2 {
-		usage();
-		return Ok(());
+		return usage();
 	}
-
-	let command = args[1].as_str();
 
 	let monitors = get_monitors()?;
 
-	if command == "ls" {
-		print_monitors(&monitors);
-	} else if command == "get" {
-		match args[2].parse::<usize>() {
-			Ok(x) => print_monitor(&monitors[x]),
-			Err(_) => print_monitors(&monitors),
-		}
-	} else if command == "set" {
-		if args.len() < 3 {
-			usage();
-			return Ok(());
-		}
-		match args[2].parse::<usize>() {
-			Ok(x) => {
-				if args.len() >= 4 && std::path::Path::new(&args[3]).exists() {
-					set_wallpaper(&monitors[x], &args[3])?;
-				} else {
-					usage();
-					return Ok(());
-				}
-			}
-			Err(_) => usage(),
-		}
-	} else {
-		usage();
-	}
+	let command = args[1].as_str();
 
-	Ok(())
+	if command == "ls" {
+		return ls(&monitors);
+	} else if command == "get" {
+		return get(&monitors, &args);
+	} else if command == "set" {
+		return set(&monitors, &args);
+	} else {
+		return usage();
+	}
 }
 
 fn string_from_pwstr(source: PWSTR) -> String {

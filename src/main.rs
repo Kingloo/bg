@@ -12,7 +12,10 @@ struct Monitor {
 }
 
 fn usage() -> Result<(), windows::Error> {
-	println!("usage: blablabla");
+	println!("usage:\n\
+	commands: ls, get, set\n\
+	get: get N\n\
+	set: set N {{path}}");
 	Ok(())
 }
 

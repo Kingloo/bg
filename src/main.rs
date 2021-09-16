@@ -4,7 +4,7 @@ use bindings::Windows::Win32::System::Com::{
 };
 use bindings::Windows::Win32::UI::Shell::{DesktopWallpaper, IDesktopWallpaper};
 use rand::{thread_rng, Rng};
-use std::fs;
+use std::{fs, path};
 
 #[derive(Debug)]
 struct Monitor {
@@ -60,22 +60,32 @@ fn print_monitors(monitors: &Vec<Monitor>) -> Result<(), windows::Error> {
 }
 
 fn set_wallpaper(monitor: &Monitor, path: &String) -> Result<(), windows::Error> {
-	unsafe {
-		let idw: IDesktopWallpaper = CoCreateInstance(&DesktopWallpaper, None, CLSCTX_ALL)?;
-		IDesktopWallpaper::SetWallpaper(&idw, monitor.monitor_id.clone(), path.as_str())?;
+	if path::Path::new(path).is_file() {
+		unsafe {
+			let idw: IDesktopWallpaper = CoCreateInstance(&DesktopWallpaper, None, CLSCTX_ALL)?;
+			IDesktopWallpaper::SetWallpaper(&idw, monitor.monitor_id.clone(), path.as_str())?;
+		}
+	} else {
+		println!("file does not exist: {}", path);
 	}
 	Ok(())
 }
 
 fn set_random_wallpaper(monitor: &Monitor, dir: &String) -> Result<(), windows::Error> {
+	if path::Path::new(dir).is_file() {
+		println!("not a directory: {}", dir);
+		return Ok(());
+	}
+
 	if let Some(random_image) = get_random_image(&dir) {
-		set_wallpaper(monitor, &random_image)
+		println!("setting monitor {} to {}", monitor.index, random_image);
+		return set_wallpaper(monitor, &random_image);
 	} else {
 		println!(
 			"failed to set wallpaper: could not get random image from {}",
 			dir
 		);
-		Ok(())
+		return Ok(());
 	}
 }
 
@@ -109,14 +119,8 @@ fn has_valid_extension(entry: &fs::DirEntry) -> bool {
 
 fn get_path_from_dir_entry(entry: &fs::DirEntry) -> Option<String> {
 	match entry.path().into_os_string().into_string() {
-		Ok(path) => {
-			println!("ok: {}", path);
-			Some(path)
-		}
-		Err(_) => {
-			println!("err: {:?}", entry);
-			None
-		}
+		Ok(path) => Some(path),
+		Err(_) => None,
 	}
 }
 

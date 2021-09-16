@@ -2,7 +2,9 @@ use bindings::Windows::Win32::Foundation::PWSTR;
 use bindings::Windows::Win32::System::Com::{
 	CoCreateInstance, CoInitializeEx, CLSCTX_ALL, COINIT_MULTITHREADED,
 };
-use bindings::Windows::Win32::UI::Shell::{DesktopWallpaper, IDesktopWallpaper};
+use bindings::Windows::Win32::UI::Shell::{
+	DesktopWallpaper, IDesktopWallpaper, DESKTOP_SLIDESHOW_OPTIONS, DESKTOP_SLIDESHOW_STATE,
+};
 use rand::{thread_rng, Rng};
 use std::{fs, path};
 
@@ -16,10 +18,11 @@ struct Monitor {
 fn usage() -> Result<(), windows::Error> {
 	println!(
 		"usage:\n\
-	commands: ls, get, set\n\
+	commands: ls, get, set, slideshow\n\
 	get: get N\n\
 	set: set N {{path}}\n\
-	set: set N random {{directory}}"
+	set: set N random {{directory}}\n\
+	slideshow: slideshow"
 	);
 	Ok(())
 }
@@ -173,6 +176,57 @@ fn set(monitors: &Vec<Monitor>, args: &Vec<String>) -> Result<(), windows::Error
 	};
 }
 
+fn slideshow(monitors: &Vec<Monitor>) -> Result<(), windows::Error> {
+	unsafe {
+		let idw: IDesktopWallpaper = CoCreateInstance(&DesktopWallpaper, None, CLSCTX_ALL)?;
+		let slideshow_state = IDesktopWallpaper::GetStatus(&idw)?;
+		let is_slideshow = is_slideshow(slideshow_state);
+		println!("slideshow\t{}", is_slideshow);
+		if is_slideshow {
+			let mut slideshow_options: DESKTOP_SLIDESHOW_OPTIONS =
+				DESKTOP_SLIDESHOW_OPTIONS::from(0);
+			let mut tick: u32 = 0;
+			let slideshow_options_ptr: *mut DESKTOP_SLIDESHOW_OPTIONS = &mut slideshow_options;
+			let tick_ptr: *mut u32 = &mut tick;
+			IDesktopWallpaper::GetSlideshowOptions(&idw, slideshow_options_ptr, tick_ptr)?;
+			println!("shuffle\t\t{}", is_slideshow_shuffle(slideshow_options));
+			println!("duration\t{} mins", get_slideshow_tick_in_minutes(&tick));
+			println!("directory\t{}", get_slideshow_directory(&monitors[0])?);
+		}
+	}
+	Ok(())
+}
+
+fn is_slideshow(state: DESKTOP_SLIDESHOW_STATE) -> bool {
+	return state == DESKTOP_SLIDESHOW_STATE(3);
+}
+
+fn is_slideshow_shuffle(options: DESKTOP_SLIDESHOW_OPTIONS) -> bool {
+	return options == DESKTOP_SLIDESHOW_OPTIONS(1);
+}
+
+fn get_slideshow_tick_in_minutes(tick: &u32) -> f32 {
+	(tick.clone() as f32 / 1000f32) / 60f32
+}
+
+fn get_slideshow_directory(monitor: &Monitor) -> Result<String, windows::Error> {
+	unsafe {
+		let idw: IDesktopWallpaper = CoCreateInstance(&DesktopWallpaper, None, CLSCTX_ALL)?;
+		let wallpaper = IDesktopWallpaper::GetWallpaper(&idw, monitor.monitor_id.clone())?;
+		let wallpaper_string = string_from_pwstr(wallpaper);
+		let full_path = path::Path::new(&wallpaper_string);
+		if let Some(parent) = full_path.parent() {
+			if parent.is_dir() {
+				if let Some(s) = parent.to_str() {
+					return Ok(s.to_string());
+				}
+			}
+		}
+	}
+
+	Ok(String::default())
+}
+
 fn main() -> windows::Result<()> {
 	let args: Vec<String> = std::env::args().collect();
 
@@ -190,6 +244,8 @@ fn main() -> windows::Result<()> {
 		return get(&monitors, &args);
 	} else if command == "set" {
 		return set(&monitors, &args);
+	} else if command == "slideshow" {
+		return slideshow(&monitors);
 	} else {
 		return usage();
 	}

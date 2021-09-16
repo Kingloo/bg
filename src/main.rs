@@ -18,7 +18,8 @@ fn usage() -> Result<(), windows::Error> {
 		"usage:\n\
 	commands: ls, get, set\n\
 	get: get N\n\
-	set: set N {{path}}"
+	set: set N {{path}}\n\
+	set: set N random {{directory}}"
 	);
 	Ok(())
 }

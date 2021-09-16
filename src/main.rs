@@ -1,6 +1,6 @@
 use bindings::Windows::Win32::Foundation::PWSTR;
 use bindings::Windows::Win32::System::Com::{
-	CoCreateInstance, CoInitializeEx, CoUninitialize, CLSCTX_ALL, COINIT_MULTITHREADED,
+	CoCreateInstance, CoInitializeEx, CLSCTX_ALL, COINIT_MULTITHREADED,
 };
 use bindings::Windows::Win32::UI::Shell::{
 	DesktopWallpaper, IDesktopWallpaper, DESKTOP_SLIDESHOW_OPTIONS, DESKTOP_SLIDESHOW_STATE,
@@ -250,10 +250,6 @@ fn main() -> windows::Result<()> {
 		slideshow(&idw, &monitors)?;
 	} else {
 		usage()?;
-	}
-
-	unsafe {
-		CoUninitialize();
 	}
 
 	Ok(())

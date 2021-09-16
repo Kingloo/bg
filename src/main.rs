@@ -3,6 +3,8 @@ use bindings::Windows::Win32::System::Com::{
 	CoCreateInstance, CoInitializeEx, CLSCTX_ALL, COINIT_MULTITHREADED,
 };
 use bindings::Windows::Win32::UI::Shell::{DesktopWallpaper, IDesktopWallpaper};
+use rand::{thread_rng, Rng};
+use std::fs;
 
 #[derive(Debug)]
 struct Monitor {
@@ -12,10 +14,12 @@ struct Monitor {
 }
 
 fn usage() -> Result<(), windows::Error> {
-	println!("usage:\n\
+	println!(
+		"usage:\n\
 	commands: ls, get, set\n\
 	get: get N\n\
-	set: set N {{path}}");
+	set: set N {{path}}"
+	);
 	Ok(())
 }
 
@@ -63,6 +67,69 @@ fn set_wallpaper(monitor: &Monitor, path: &String) -> Result<(), windows::Error>
 	Ok(())
 }
 
+fn set_random_wallpaper(monitor: &Monitor, dir: &String) -> Result<(), windows::Error> {
+	if let Some(random_image) = get_random_image(&dir) {
+		set_wallpaper(monitor, &random_image)
+	} else {
+		println!(
+			"failed to set wallpaper: could not get random image from {}",
+			dir
+		);
+		Ok(())
+	}
+}
+
+fn get_random_image(dir: &String) -> Option<String> {
+	let files: Vec<fs::DirEntry> = fs::read_dir(dir)
+		.unwrap()
+		.filter(|file| file.is_ok())
+		.map(|file| file.expect("failed to turn Ok<DirEntry> into DirEntry"))
+		.filter(|file| has_valid_extension(file))
+		.collect();
+
+	if files.len() == 0 {
+		return None;
+	}
+
+	if files.len() == 1 {
+		return get_path_from_dir_entry(&files[0]);
+	}
+
+	let random_index = thread_rng().gen_range(0..files.len() - 1);
+
+	get_path_from_dir_entry(&files[random_index])
+}
+
+fn has_valid_extension(entry: &fs::DirEntry) -> bool {
+	if let Some(extension) = get_extension(entry) {
+		return ["jpg", "jpeg", "png"].iter().any(|ext| ext == &extension);
+	}
+	false
+}
+
+fn get_path_from_dir_entry(entry: &fs::DirEntry) -> Option<String> {
+	match entry.path().into_os_string().into_string() {
+		Ok(path) => {
+			println!("ok: {}", path);
+			Some(path)
+		}
+		Err(_) => {
+			println!("err: {:?}", entry);
+			None
+		}
+	}
+}
+
+fn get_extension(entry: &fs::DirEntry) -> Option<String> {
+	match entry.path().extension() {
+		Some(ext) => match ext.to_os_string().into_string() {
+			Ok(s) => Some(s),
+			Err(_) => None,
+		},
+		None => None,
+	}
+}
+
 fn ls(monitors: &Vec<Monitor>) -> Result<(), windows::Error> {
 	print_monitors(monitors)
 }
@@ -85,11 +152,17 @@ fn set(monitors: &Vec<Monitor>, args: &Vec<String>) -> Result<(), windows::Error
 
 	return match args[2].parse::<usize>() {
 		Ok(x) => {
-			if args.len() >= 4 && std::path::Path::new(&args[3]).exists() {
-				return set_wallpaper(&monitors[x], &args[3]);
-			} else {
-				return usage();
+			if args.len() >= 4 {
+				if &args[3] == "random" {
+					return set_random_wallpaper(&monitors[x], &args[4]);
+				}
+
+				if std::path::Path::new(&args[3]).exists() {
+					return set_wallpaper(&monitors[x], &args[3]);
+				}
 			}
+
+			return usage();
 		}
 		Err(_) => usage(),
 	};

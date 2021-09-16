@@ -1,6 +1,6 @@
 use bindings::Windows::Win32::Foundation::PWSTR;
 use bindings::Windows::Win32::System::Com::{
-	CoCreateInstance, CoInitializeEx, CLSCTX_ALL, COINIT_MULTITHREADED,
+	CoCreateInstance, CoInitializeEx, CoUninitialize, CLSCTX_ALL, COINIT_MULTITHREADED,
 };
 use bindings::Windows::Win32::UI::Shell::{
 	DesktopWallpaper, IDesktopWallpaper, DESKTOP_SLIDESHOW_OPTIONS, DESKTOP_SLIDESHOW_STATE,
@@ -27,16 +27,14 @@ fn usage() -> Result<(), windows::Error> {
 	Ok(())
 }
 
-fn get_monitors() -> Result<Vec<Monitor>, windows::Error> {
+fn get_monitors(idw: &IDesktopWallpaper) -> Result<Vec<Monitor>, windows::Error> {
 	let mut monitors = Vec::new();
 
 	unsafe {
-		CoInitializeEx(std::ptr::null_mut(), COINIT_MULTITHREADED)?;
-		let idw: IDesktopWallpaper = CoCreateInstance(&DesktopWallpaper, None, CLSCTX_ALL)?;
-		let monitor_count = IDesktopWallpaper::GetMonitorDevicePathCount(&idw)?;
+		let monitor_count = IDesktopWallpaper::GetMonitorDevicePathCount(idw)?;
 		for i in 0..monitor_count {
-			let monitor_id = IDesktopWallpaper::GetMonitorDevicePathAt(&idw, i)?;
-			let wallpaper = IDesktopWallpaper::GetWallpaper(&idw, monitor_id)?;
+			let monitor_id = IDesktopWallpaper::GetMonitorDevicePathAt(idw, i)?;
+			let wallpaper = IDesktopWallpaper::GetWallpaper(idw, monitor_id)?;
 			monitors.push(Monitor {
 				index: i as usize,
 				monitor_id: string_from_pwstr(monitor_id),
@@ -63,11 +61,10 @@ fn print_monitors(monitors: &Vec<Monitor>) -> Result<(), windows::Error> {
 	Ok(())
 }
 
-fn set_wallpaper(monitor: &Monitor, path: &String) -> Result<(), windows::Error> {
+fn set_wallpaper(idw: &IDesktopWallpaper, monitor: &Monitor, path: &String) -> Result<(), windows::Error> {
 	if path::Path::new(path).is_file() {
 		unsafe {
-			let idw: IDesktopWallpaper = CoCreateInstance(&DesktopWallpaper, None, CLSCTX_ALL)?;
-			IDesktopWallpaper::SetWallpaper(&idw, monitor.monitor_id.clone(), path.as_str())?;
+			IDesktopWallpaper::SetWallpaper(idw, monitor.monitor_id.clone(), path.as_str())?;
 		}
 	} else {
 		println!("file does not exist: {}", path);
@@ -75,7 +72,7 @@ fn set_wallpaper(monitor: &Monitor, path: &String) -> Result<(), windows::Error>
 	Ok(())
 }
 
-fn set_random_wallpaper(monitor: &Monitor, dir: &String) -> Result<(), windows::Error> {
+fn set_random_wallpaper(idw: &IDesktopWallpaper, monitor: &Monitor, dir: &String) -> Result<(), windows::Error> {
 	if path::Path::new(dir).is_file() {
 		println!("not a directory: {}", dir);
 		return Ok(());
@@ -83,7 +80,7 @@ fn set_random_wallpaper(monitor: &Monitor, dir: &String) -> Result<(), windows::
 
 	if let Some(random_image) = get_random_image(&dir) {
 		println!("setting monitor {} to {}", monitor.index, random_image);
-		return set_wallpaper(monitor, &random_image);
+		return set_wallpaper(idw, monitor, &random_image);
 	} else {
 		println!(
 			"failed to set wallpaper: could not get random image from {}",
@@ -153,7 +150,7 @@ fn get(monitors: &Vec<Monitor>, args: &Vec<String>) -> Result<(), windows::Error
 	};
 }
 
-fn set(monitors: &Vec<Monitor>, args: &Vec<String>) -> Result<(), windows::Error> {
+fn set(idw: &IDesktopWallpaper, monitors: &Vec<Monitor>, args: &Vec<String>) -> Result<(), windows::Error> {
 	if args.len() < 3 {
 		return usage();
 	}
@@ -162,11 +159,11 @@ fn set(monitors: &Vec<Monitor>, args: &Vec<String>) -> Result<(), windows::Error
 		Ok(x) => {
 			if args.len() >= 4 {
 				if &args[3] == "random" {
-					return set_random_wallpaper(&monitors[x], &args[4]);
+					return set_random_wallpaper(idw, &monitors[x], &args[4]);
 				}
 
 				if std::path::Path::new(&args[3]).exists() {
-					return set_wallpaper(&monitors[x], &args[3]);
+					return set_wallpaper(idw, &monitors[x], &args[3]);
 				}
 			}
 
@@ -176,10 +173,9 @@ fn set(monitors: &Vec<Monitor>, args: &Vec<String>) -> Result<(), windows::Error
 	};
 }
 
-fn slideshow(monitors: &Vec<Monitor>) -> Result<(), windows::Error> {
+fn slideshow(idw: &IDesktopWallpaper, monitors: &Vec<Monitor>) -> Result<(), windows::Error> {
 	unsafe {
-		let idw: IDesktopWallpaper = CoCreateInstance(&DesktopWallpaper, None, CLSCTX_ALL)?;
-		let slideshow_state = IDesktopWallpaper::GetStatus(&idw)?;
+		let slideshow_state = IDesktopWallpaper::GetStatus(idw)?;
 		let is_slideshow = is_slideshow(slideshow_state);
 		println!("slideshow\t{}", is_slideshow);
 		if is_slideshow {
@@ -188,10 +184,10 @@ fn slideshow(monitors: &Vec<Monitor>) -> Result<(), windows::Error> {
 			let mut tick: u32 = 0;
 			let slideshow_options_ptr: *mut DESKTOP_SLIDESHOW_OPTIONS = &mut slideshow_options;
 			let tick_ptr: *mut u32 = &mut tick;
-			IDesktopWallpaper::GetSlideshowOptions(&idw, slideshow_options_ptr, tick_ptr)?;
+			IDesktopWallpaper::GetSlideshowOptions(idw, slideshow_options_ptr, tick_ptr)?;
 			println!("shuffle\t\t{}", is_slideshow_shuffle(slideshow_options));
 			println!("duration\t{} mins", get_slideshow_tick_in_minutes(&tick));
-			println!("directory\t{}", get_slideshow_directory(&monitors[0])?);
+			println!("directory\t{}", get_slideshow_directory(idw, &monitors[0])?);
 		}
 	}
 	Ok(())
@@ -209,10 +205,9 @@ fn get_slideshow_tick_in_minutes(tick: &u32) -> f32 {
 	(tick.clone() as f32 / 1000f32) / 60f32
 }
 
-fn get_slideshow_directory(monitor: &Monitor) -> Result<String, windows::Error> {
+fn get_slideshow_directory(idw: &IDesktopWallpaper, monitor: &Monitor) -> Result<String, windows::Error> {
 	unsafe {
-		let idw: IDesktopWallpaper = CoCreateInstance(&DesktopWallpaper, None, CLSCTX_ALL)?;
-		let wallpaper = IDesktopWallpaper::GetWallpaper(&idw, monitor.monitor_id.clone())?;
+		let wallpaper = IDesktopWallpaper::GetWallpaper(idw, monitor.monitor_id.clone())?;
 		let wallpaper_string = string_from_pwstr(wallpaper);
 		let full_path = path::Path::new(&wallpaper_string);
 		if let Some(parent) = full_path.parent() {
@@ -234,21 +229,34 @@ fn main() -> windows::Result<()> {
 		return usage();
 	}
 
-	let monitors = get_monitors()?;
+	let idw: IDesktopWallpaper;
+
+	unsafe {
+		CoInitializeEx(std::ptr::null_mut(), COINIT_MULTITHREADED)?;
+		idw = CoCreateInstance(&DesktopWallpaper, None, CLSCTX_ALL)?;
+	}
+
+	let monitors = get_monitors(&idw)?;
 
 	let command = args[1].as_str();
 
 	if command == "ls" {
-		return ls(&monitors);
+		ls(&monitors)?;
 	} else if command == "get" {
-		return get(&monitors, &args);
+		get(&monitors, &args)?;
 	} else if command == "set" {
-		return set(&monitors, &args);
+		set(&idw, &monitors, &args)?;
 	} else if command == "slideshow" {
-		return slideshow(&monitors);
+		slideshow(&idw, &monitors)?;
 	} else {
-		return usage();
+		usage()?;
 	}
+
+	unsafe {
+		CoUninitialize();
+	}
+
+	Ok(())
 }
 
 fn string_from_pwstr(source: PWSTR) -> String {

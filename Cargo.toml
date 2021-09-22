@@ -1,9 +1,9 @@
 [package]
 name = "bg"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2018"
 
 [dependencies]
 bindings = { path = "bindings" }
-windows = "0.19" # This should match the version you used in the bindings crate
+windows = "0.20.1"
 rand = { version = "0.8.4", features = [ "std_rng" ] }

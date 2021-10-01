@@ -4,6 +4,7 @@ use bindings::Windows::Win32::System::Com::{
 };
 use bindings::Windows::Win32::UI::Shell::{
 	DesktopWallpaper, IDesktopWallpaper, DESKTOP_SLIDESHOW_OPTIONS, DESKTOP_SLIDESHOW_STATE,
+	DSD_FORWARD,
 };
 use rand::{thread_rng, Rng};
 use std::{fs, path};
@@ -18,11 +19,12 @@ struct Monitor {
 fn usage() -> Result<(), windows::Error> {
 	println!(
 		"usage:\n\
-	commands: ls, get, set, slideshow\n\
-	get: get N\n\
-	set: set N {{path}}\n\
-	set: set N random {{directory}}\n\
-	slideshow: slideshow"
+	commands: ls, set, slideshow\n\
+	ls: list wallpapers on all monitors\n\
+	ls N: list wallpaper on monitor N\n\
+	set N {{path}}: sets wallpaper of monitor N to path\n\
+	set N random {{directory}}: sets wallpaper of monitor N to a random image from directory\n\
+	slideshow advance: advance slideshow to next wallpaper"
 	);
 	Ok(())
 }
@@ -61,7 +63,11 @@ fn print_monitors(monitors: &Vec<Monitor>) -> Result<(), windows::Error> {
 	Ok(())
 }
 
-fn set_wallpaper(idw: &IDesktopWallpaper, monitor: &Monitor, path: &String) -> Result<(), windows::Error> {
+fn set_wallpaper(
+	idw: &IDesktopWallpaper,
+	monitor: &Monitor,
+	path: &String,
+) -> Result<(), windows::Error> {
 	if path::Path::new(path).is_file() {
 		unsafe {
 			IDesktopWallpaper::SetWallpaper(idw, monitor.monitor_id.clone(), path.as_str())?;
@@ -72,7 +78,11 @@ fn set_wallpaper(idw: &IDesktopWallpaper, monitor: &Monitor, path: &String) -> R
 	Ok(())
 }
 
-fn set_random_wallpaper(idw: &IDesktopWallpaper, monitor: &Monitor, dir: &String) -> Result<(), windows::Error> {
+fn set_random_wallpaper(
+	idw: &IDesktopWallpaper,
+	monitor: &Monitor,
+	dir: &String,
+) -> Result<(), windows::Error> {
 	if path::Path::new(dir).is_file() {
 		println!("not a directory: {}", dir);
 		return Ok(());
@@ -135,22 +145,23 @@ fn get_extension(entry: &fs::DirEntry) -> Option<String> {
 	}
 }
 
-fn ls(monitors: &Vec<Monitor>) -> Result<(), windows::Error> {
-	print_monitors(monitors)
-}
-
-fn get(monitors: &Vec<Monitor>, args: &Vec<String>) -> Result<(), windows::Error> {
-	if args.len() < 3 {
-		return usage();
+fn ls(monitors: &Vec<Monitor>, args: &Vec<String>) -> Result<(), windows::Error> {
+	if args.len() > 2 {
+		if let Ok(monitor_index) = args[2].parse::<usize>() {
+			if monitor_index < monitors.len() {
+				return print_monitor(&monitors[monitor_index]);
+			}
+		}
 	}
 
-	return match args[2].parse::<usize>() {
-		Ok(x) => print_monitor(&monitors[x]),
-		Err(_) => usage(),
-	};
+	return print_monitors(monitors);
 }
 
-fn set(idw: &IDesktopWallpaper, monitors: &Vec<Monitor>, args: &Vec<String>) -> Result<(), windows::Error> {
+fn set(
+	idw: &IDesktopWallpaper,
+	monitors: &Vec<Monitor>,
+	args: &Vec<String>,
+) -> Result<(), windows::Error> {
 	if args.len() < 3 {
 		return usage();
 	}
@@ -173,23 +184,42 @@ fn set(idw: &IDesktopWallpaper, monitors: &Vec<Monitor>, args: &Vec<String>) -> 
 	};
 }
 
-fn slideshow(idw: &IDesktopWallpaper, monitors: &Vec<Monitor>) -> Result<(), windows::Error> {
+fn slideshow(
+	idw: &IDesktopWallpaper,
+	monitors: &Vec<Monitor>,
+	args: &Vec<String>,
+) -> Result<(), windows::Error> {
 	unsafe {
 		let slideshow_state = IDesktopWallpaper::GetStatus(idw)?;
-		let is_slideshow = is_slideshow(slideshow_state);
-		println!("slideshow\t{}", is_slideshow);
-		if is_slideshow {
-			let mut slideshow_options: DESKTOP_SLIDESHOW_OPTIONS =
-				DESKTOP_SLIDESHOW_OPTIONS::from(0);
-			let mut tick: u32 = 0;
-			let slideshow_options_ptr: *mut DESKTOP_SLIDESHOW_OPTIONS = &mut slideshow_options;
-			let tick_ptr: *mut u32 = &mut tick;
-			IDesktopWallpaper::GetSlideshowOptions(idw, slideshow_options_ptr, tick_ptr)?;
-			println!("shuffle\t\t{}", is_slideshow_shuffle(slideshow_options));
-			println!("duration\t{} mins", get_slideshow_tick_in_minutes(&tick));
-			println!("directory\t{}", get_slideshow_directory(idw, &monitors[0])?);
+		if is_slideshow(slideshow_state) {
+			if args.len() > 2 && args[2] == "advance" {
+				return advance_slideshow(idw, &monitors[0]);
+			} else {
+				return show_slideshow_details(idw, monitors);
+			}
+		} else {
+			println!("not a slideshow")
 		}
+
+		Ok(())
 	}
+}
+
+fn show_slideshow_details(
+	idw: &IDesktopWallpaper,
+	monitors: &Vec<Monitor>,
+) -> Result<(), windows::Error> {
+	unsafe {
+		let mut slideshow_options: DESKTOP_SLIDESHOW_OPTIONS = DESKTOP_SLIDESHOW_OPTIONS::from(0);
+		let mut tick: u32 = 0;
+		let slideshow_options_ptr: *mut DESKTOP_SLIDESHOW_OPTIONS = &mut slideshow_options;
+		let tick_ptr: *mut u32 = &mut tick;
+		IDesktopWallpaper::GetSlideshowOptions(idw, slideshow_options_ptr, tick_ptr)?;
+		println!("shuffle\t\t{}", is_slideshow_shuffle(slideshow_options));
+		println!("duration\t{} mins", get_slideshow_tick_in_minutes(&tick));
+		println!("directory\t{}", get_slideshow_directory(idw, &monitors[0])?);
+	}
+
 	Ok(())
 }
 
@@ -205,7 +235,10 @@ fn get_slideshow_tick_in_minutes(tick: &u32) -> f32 {
 	(tick.clone() as f32 / 1000f32) / 60f32
 }
 
-fn get_slideshow_directory(idw: &IDesktopWallpaper, monitor: &Monitor) -> Result<String, windows::Error> {
+fn get_slideshow_directory(
+	idw: &IDesktopWallpaper,
+	monitor: &Monitor,
+) -> Result<String, windows::Error> {
 	unsafe {
 		let wallpaper = IDesktopWallpaper::GetWallpaper(idw, monitor.monitor_id.clone())?;
 		let wallpaper_string = string_from_pwstr(wallpaper);
@@ -220,6 +253,12 @@ fn get_slideshow_directory(idw: &IDesktopWallpaper, monitor: &Monitor) -> Result
 	}
 
 	Ok(String::default())
+}
+
+fn advance_slideshow(idw: &IDesktopWallpaper, monitor: &Monitor) -> Result<(), windows::Error> {
+	unsafe {
+		IDesktopWallpaper::AdvanceSlideshow(idw, monitor.monitor_id.clone(), DSD_FORWARD) // null advances next scheduled
+	}
 }
 
 fn main() -> windows::Result<()> {
@@ -241,13 +280,11 @@ fn main() -> windows::Result<()> {
 	let command = args[1].as_str();
 
 	if command == "ls" {
-		ls(&monitors)?;
-	} else if command == "get" {
-		get(&monitors, &args)?;
+		ls(&monitors, &args)?;
 	} else if command == "set" {
 		set(&idw, &monitors, &args)?;
 	} else if command == "slideshow" {
-		slideshow(&idw, &monitors)?;
+		slideshow(&idw, &monitors, &args)?;
 	} else {
 		usage()?;
 	}

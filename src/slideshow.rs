@@ -4,8 +4,7 @@ use std::path::{Path, PathBuf};
 use windows::core::Result;
 use windows::Win32::Foundation::PWSTR;
 use windows::Win32::UI::Shell::{
-	IDesktopWallpaper, DESKTOP_SLIDESHOW_DIRECTION, DESKTOP_SLIDESHOW_OPTIONS,
-	DESKTOP_SLIDESHOW_STATE,
+	IDesktopWallpaper, DESKTOP_SLIDESHOW_OPTIONS, DESKTOP_SLIDESHOW_STATE, DSD_FORWARD,
 };
 
 fn show_slideshow_details(idw: &IDesktopWallpaper, monitors: &Vec<Monitor>) -> Result<()> {
@@ -70,9 +69,11 @@ fn get_slideshow_directory(idw: &IDesktopWallpaper, monitor: &Monitor) -> Option
 	return None;
 }
 
-fn advance_slideshow(idw: &IDesktopWallpaper, monitor: &Monitor) -> Result<()> {
+fn advance_slideshow(idw: &IDesktopWallpaper) -> Result<()> {
 	unsafe {
-		IDesktopWallpaper::AdvanceSlideshow(idw, monitor.monitor_id, DESKTOP_SLIDESHOW_DIRECTION(1))
+		// monitor.monitor_id doesn't work here for second argument
+		// PWSTR::default() is the equivalent of NULL
+		IDesktopWallpaper::AdvanceSlideshow(idw, PWSTR::default(), DSD_FORWARD)
 	}
 }
 
@@ -81,7 +82,7 @@ pub fn slideshow(idw: &IDesktopWallpaper, monitors: &Vec<Monitor>, args: &[Strin
 		let slideshow_state = IDesktopWallpaper::GetStatus(idw)?;
 		if is_slideshow(slideshow_state) {
 			if args.len() > 1 && args[1] == "advance" {
-				return advance_slideshow(idw, &monitors[0]);
+				return advance_slideshow(idw);
 			} else {
 				return show_slideshow_details(idw, monitors);
 			}

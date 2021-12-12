@@ -11,7 +11,7 @@ pub fn usage() -> Result<()> {
 	ls n: list wallpaper on monitor n\n\
 	set n {{path}}: sets wallpaper of monitor n to path\n\
 	set n random {{directory}}: sets wallpaper of monitor n to a random image from directory\n\
-	slideshow advance: advance slideshow to next wallpaper (!! BROKEN !!)"
+	slideshow advance: advance slideshow to next wallpaper"
 	);
 	Ok(())
 }

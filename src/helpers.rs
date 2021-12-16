@@ -19,17 +19,16 @@ pub fn usage() -> Result<()> {
 pub fn get_monitors(idw: &IDesktopWallpaper) -> Result<Vec<Monitor>> {
 	let mut monitors = Vec::new();
 
-	unsafe {
-		let monitor_count = IDesktopWallpaper::GetMonitorDevicePathCount(idw)?;
-		for i in 0..monitor_count {
-			let monitor_id = IDesktopWallpaper::GetMonitorDevicePathAt(idw, i)?;
-			let wallpaper = IDesktopWallpaper::GetWallpaper(idw, monitor_id)?;
-			monitors.push(Monitor {
-				index: i as usize,
-				monitor_id: monitor_id,
-				wallpaper: wallpaper,
-			})
-		}
+	let monitor_count = unsafe { IDesktopWallpaper::GetMonitorDevicePathCount(idw)? };
+
+	for i in 0..monitor_count {
+		let monitor_id = unsafe { IDesktopWallpaper::GetMonitorDevicePathAt(idw, i)? };
+		let wallpaper = unsafe { IDesktopWallpaper::GetWallpaper(idw, monitor_id)? };
+		monitors.push(Monitor {
+			index: i as usize,
+			monitor_id: monitor_id,
+			wallpaper: wallpaper,
+		})
 	}
 
 	Ok(monitors)

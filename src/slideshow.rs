@@ -8,24 +8,24 @@ use windows::Win32::UI::Shell::{
 };
 
 fn show_slideshow_details(idw: &IDesktopWallpaper, monitors: &Vec<Monitor>) -> Result<()> {
+	let mut slideshow_options: DESKTOP_SLIDESHOW_OPTIONS = DESKTOP_SLIDESHOW_OPTIONS::from(0);
+	let mut tick: u32 = 0;
+	let slideshow_options_ptr: *mut DESKTOP_SLIDESHOW_OPTIONS = &mut slideshow_options;
+	let tick_ptr: *mut u32 = &mut tick;
+
 	unsafe {
-		let mut slideshow_options: DESKTOP_SLIDESHOW_OPTIONS = DESKTOP_SLIDESHOW_OPTIONS::from(0);
-		let mut tick: u32 = 0;
-		let slideshow_options_ptr: *mut DESKTOP_SLIDESHOW_OPTIONS = &mut slideshow_options;
-		let tick_ptr: *mut u32 = &mut tick;
-
 		IDesktopWallpaper::GetSlideshowOptions(idw, slideshow_options_ptr, tick_ptr)?;
-
-		println!("shuffle\t\t{}", is_slideshow_shuffle(slideshow_options));
-		println!("duration\t{} mins", get_slideshow_tick_in_minutes(&tick));
-
-		let slideshow_directory = match get_slideshow_directory(idw, &monitors[0]) {
-			Some(dir) => format!("{}", dir.display()),
-			None => String::from("directory not found"),
-		};
-
-		println!("directory\t{}", slideshow_directory);
 	}
+
+	println!("shuffle\t\t{}", is_slideshow_shuffle(slideshow_options));
+	println!("duration\t{} mins", get_slideshow_tick_in_minutes(&tick));
+
+	let slideshow_directory = match get_slideshow_directory(idw, &monitors[0]) {
+		Some(dir) => format!("{}", dir.display()),
+		None => String::from("directory not found"),
+	};
+
+	println!("directory\t{}", slideshow_directory);
 
 	Ok(())
 }
@@ -43,11 +43,7 @@ fn get_slideshow_tick_in_minutes(tick: &u32) -> f32 {
 }
 
 fn get_slideshow_directory(idw: &IDesktopWallpaper, monitor: &Monitor) -> Option<PathBuf> {
-	let wallpaper: Result<PWSTR>;
-
-	unsafe {
-		wallpaper = IDesktopWallpaper::GetWallpaper(idw, monitor.wallpaper);
-	}
+	let wallpaper: Result<PWSTR> = unsafe { IDesktopWallpaper::GetWallpaper(idw, monitor.wallpaper) };
 
 	let wallpaper_string = match wallpaper {
 		Ok(pwstr) => pwstr.into_string(),
@@ -78,18 +74,17 @@ fn advance_slideshow(idw: &IDesktopWallpaper) -> Result<()> {
 }
 
 pub fn slideshow(idw: &IDesktopWallpaper, monitors: &Vec<Monitor>, args: &[String]) -> Result<()> {
-	unsafe {
-		let slideshow_state = IDesktopWallpaper::GetStatus(idw)?;
-		if is_slideshow(slideshow_state) {
-			if args.len() > 1 && args[1] == "advance" {
-				return advance_slideshow(idw);
-			} else {
-				return show_slideshow_details(idw, monitors);
-			}
-		} else {
-			println!("not a slideshow")
-		}
+	let slideshow_state = unsafe { IDesktopWallpaper::GetStatus(idw)? };
 
-		Ok(())
+	if is_slideshow(slideshow_state) {
+		if args.len() > 1 && args[1] == "advance" {
+			return advance_slideshow(idw);
+		} else {
+			return show_slideshow_details(idw, monitors);
+		}
+	} else {
+		println!("not a slideshow")
 	}
+
+	Ok(())
 }

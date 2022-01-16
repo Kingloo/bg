@@ -31,11 +31,11 @@ fn show_slideshow_details(idw: &IDesktopWallpaper, monitors: &Vec<Monitor>) -> R
 }
 
 fn is_slideshow(state: DESKTOP_SLIDESHOW_STATE) -> bool {
-	state == DESKTOP_SLIDESHOW_STATE(3)
+	state == DESKTOP_SLIDESHOW_STATE::from(3)
 }
 
 fn is_slideshow_shuffle(options: DESKTOP_SLIDESHOW_OPTIONS) -> bool {
-	options == DESKTOP_SLIDESHOW_OPTIONS(1)
+	options == DESKTOP_SLIDESHOW_OPTIONS::from(1)
 }
 
 fn get_slideshow_tick_in_minutes(tick: &u32) -> f32 {

@@ -1,14 +1,14 @@
 use crate::helpers::IntoString;
 use crate::monitor::Monitor;
 use std::path::{Path, PathBuf};
-use windows::core::Result;
-use windows::Win32::Foundation::PWSTR;
+use windows::core::{PCWSTR, PWSTR, Result};
 use windows::Win32::UI::Shell::{
 	IDesktopWallpaper, DESKTOP_SLIDESHOW_OPTIONS, DESKTOP_SLIDESHOW_STATE, DSD_FORWARD,
+	DSO_SHUFFLEIMAGES, DSS_ENABLED, DSS_SLIDESHOW,
 };
 
 fn show_slideshow_details(idw: &IDesktopWallpaper, monitors: &Vec<Monitor>) -> Result<()> {
-	let mut slideshow_options: DESKTOP_SLIDESHOW_OPTIONS = DESKTOP_SLIDESHOW_OPTIONS::from(0);
+	let mut slideshow_options: DESKTOP_SLIDESHOW_OPTIONS = DESKTOP_SLIDESHOW_OPTIONS(0);
 	let mut tick: u32 = 0;
 	let slideshow_options_ptr: *mut DESKTOP_SLIDESHOW_OPTIONS = &mut slideshow_options;
 	let tick_ptr: *mut u32 = &mut tick;
@@ -31,11 +31,11 @@ fn show_slideshow_details(idw: &IDesktopWallpaper, monitors: &Vec<Monitor>) -> R
 }
 
 fn is_slideshow(state: DESKTOP_SLIDESHOW_STATE) -> bool {
-	state == DESKTOP_SLIDESHOW_STATE::from(3)
+	state == DESKTOP_SLIDESHOW_STATE(DSS_ENABLED.0 + DSS_SLIDESHOW.0)
 }
 
 fn is_slideshow_shuffle(options: DESKTOP_SLIDESHOW_OPTIONS) -> bool {
-	options == DESKTOP_SLIDESHOW_OPTIONS::from(1)
+	options == DSO_SHUFFLEIMAGES
 }
 
 fn get_slideshow_tick_in_minutes(tick: &u32) -> f32 {
@@ -43,7 +43,8 @@ fn get_slideshow_tick_in_minutes(tick: &u32) -> f32 {
 }
 
 fn get_slideshow_directory(idw: &IDesktopWallpaper, monitor: &Monitor) -> Option<PathBuf> {
-	let wallpaper: Result<PWSTR> = unsafe { IDesktopWallpaper::GetWallpaper(idw, monitor.wallpaper) };
+	let wallpaper: Result<PWSTR> =
+		unsafe { IDesktopWallpaper::GetWallpaper(idw, PCWSTR(monitor.wallpaper.0)) };
 
 	let wallpaper_string = match wallpaper {
 		Ok(pwstr) => pwstr.into_string(),
@@ -69,7 +70,7 @@ fn advance_slideshow(idw: &IDesktopWallpaper) -> Result<()> {
 	unsafe {
 		// monitor.monitor_id doesn't work here for second argument
 		// PWSTR::default() is the equivalent of NULL
-		IDesktopWallpaper::AdvanceSlideshow(idw, PWSTR::default(), DSD_FORWARD)
+		IDesktopWallpaper::AdvanceSlideshow(idw, PCWSTR::default(), DSD_FORWARD)
 	}
 }
 

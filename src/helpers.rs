@@ -1,6 +1,5 @@
 use crate::monitor::Monitor;
-use windows::core::Result;
-use windows::Win32::Foundation::PWSTR;
+use windows::core::{PCWSTR, PWSTR, Result};
 use windows::Win32::UI::Shell::IDesktopWallpaper;
 
 pub fn usage() -> Result<()> {
@@ -23,7 +22,7 @@ pub fn get_monitors(idw: &IDesktopWallpaper) -> Result<Vec<Monitor>> {
 
 	for i in 0..monitor_count {
 		let monitor_id = unsafe { IDesktopWallpaper::GetMonitorDevicePathAt(idw, i)? };
-		let wallpaper = unsafe { IDesktopWallpaper::GetWallpaper(idw, monitor_id)? };
+		let wallpaper = unsafe { IDesktopWallpaper::GetWallpaper(idw, PCWSTR(monitor_id.0))? };
 		monitors.push(Monitor {
 			index: i as usize,
 			monitor_id: monitor_id,
@@ -64,6 +63,10 @@ pub trait IntoPWSTR {
 	fn into_pwstr(self) -> PWSTR;
 }
 
+pub trait IntoPCWSTR {
+	fn into_pcwstr(self) -> PCWSTR;
+}
+
 impl IntoPWSTR for String {
 	fn into_pwstr(self) -> PWSTR {
 		let mut encoded = self.encode_utf16().chain([0u16]).collect::<Vec<u16>>();
@@ -71,9 +74,23 @@ impl IntoPWSTR for String {
 	}
 }
 
+impl IntoPCWSTR for String {
+	fn into_pcwstr(self) -> PCWSTR {
+		let mut encoded = self.encode_utf16().chain([0u16]).collect::<Vec<u16>>();
+		PCWSTR(encoded.as_mut_ptr())
+	}
+}
+
 impl IntoPWSTR for &str {
 	fn into_pwstr(self) -> PWSTR {
 		let mut encoded = self.encode_utf16().chain([0u16]).collect::<Vec<u16>>();
 		PWSTR(encoded.as_mut_ptr())
+	}
+}
+
+impl IntoPCWSTR for &str {
+	fn into_pcwstr(self) -> PCWSTR {
+		let mut encoded = self.encode_utf16().chain([0u16]).collect::<Vec<u16>>();
+		PCWSTR(encoded.as_mut_ptr())
 	}
 }

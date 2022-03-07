@@ -24,7 +24,7 @@ pub fn ls(monitors: &Vec<Monitor>, args: &[String]) -> Result<()> {
 				println!("no monitor found at index {}", monitor_index);
 			}
 		} else {
-			return usage()
+			return usage();
 		}
 	} else {
 		print_monitors(monitors);

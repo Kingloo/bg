@@ -1,4 +1,4 @@
-use windows::Win32::Foundation::PWSTR;
+use windows::core::PWSTR;
 
 #[derive(Debug)]
 pub struct Monitor {

@@ -1,5 +1,5 @@
 use crate::monitor::Monitor;
-use windows::core::{PCWSTR, PWSTR, Result};
+use windows::core::{Result, PCWSTR, PWSTR};
 use windows::Win32::UI::Shell::IDesktopWallpaper;
 
 pub fn usage() -> Result<()> {

@@ -1,10 +1,9 @@
 use crate::helpers::IntoString;
 use crate::monitor::Monitor;
 use std::path::{Path, PathBuf};
-use windows::core::{PCWSTR, PWSTR, Result};
+use windows::core::{Result, PCWSTR, PWSTR};
 use windows::Win32::UI::Shell::{
-	IDesktopWallpaper, DESKTOP_SLIDESHOW_OPTIONS, DESKTOP_SLIDESHOW_STATE, DSD_FORWARD,
-	DSO_SHUFFLEIMAGES, DSS_ENABLED, DSS_SLIDESHOW,
+	IDesktopWallpaper, DESKTOP_SLIDESHOW_OPTIONS, DESKTOP_SLIDESHOW_STATE, DSD_FORWARD, DSO_SHUFFLEIMAGES, DSS_ENABLED, DSS_SLIDESHOW,
 };
 
 fn show_slideshow_details(idw: &IDesktopWallpaper, monitors: &Vec<Monitor>) -> Result<()> {
@@ -43,8 +42,7 @@ fn get_slideshow_tick_in_minutes(tick: &u32) -> f32 {
 }
 
 fn get_slideshow_directory(idw: &IDesktopWallpaper, monitor: &Monitor) -> Option<PathBuf> {
-	let wallpaper: Result<PWSTR> =
-		unsafe { IDesktopWallpaper::GetWallpaper(idw, PCWSTR(monitor.wallpaper.0)) };
+	let wallpaper: Result<PWSTR> = unsafe { IDesktopWallpaper::GetWallpaper(idw, PCWSTR(monitor.wallpaper.0)) };
 
 	let wallpaper_string = match wallpaper {
 		Ok(pwstr) => pwstr.into_string(),

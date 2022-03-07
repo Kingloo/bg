@@ -1,0 +1,7 @@
+edition = "2021"
+hard_tabs = true
+# group_imports = "StdExternalCrate"
+max_width = 150
+# reorder_impl_items = true
+reorder_modules = true
+tab_spaces = 4

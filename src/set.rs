@@ -3,14 +3,12 @@ use crate::monitor::Monitor;
 use rand::{thread_rng, Rng};
 use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
-use windows::core::{PCWSTR, Result};
+use windows::core::{Result, PCWSTR};
 use windows::Win32::UI::Shell::IDesktopWallpaper;
 
 fn set_wallpaper(idw: &IDesktopWallpaper, monitor: &Monitor, path: &Path) -> Result<()> {
 	let full_path = format!("{}", path.display());
-	unsafe {
-		IDesktopWallpaper::SetWallpaper(idw, PCWSTR(monitor.monitor_id.0), full_path.into_pcwstr())
-	}
+	unsafe { IDesktopWallpaper::SetWallpaper(idw, PCWSTR(monitor.monitor_id.0), full_path.into_pcwstr()) }
 }
 
 fn set_random_wallpaper(idw: &IDesktopWallpaper, monitor: &Monitor, path: &Path) -> Result<()> {
@@ -39,10 +37,7 @@ fn get_random_image(path: &Path) -> PathBuf {
 }
 
 fn is_valid_extension(extension: Option<&OsStr>) -> bool {
-	extension.is_some()
-		&& ["jpg", "jpeg", "png"]
-			.iter()
-			.any(|ext| ext == &extension.unwrap())
+	extension.is_some() && ["jpg", "jpeg", "png"].iter().any(|ext| ext == &extension.unwrap())
 }
 
 pub fn set(idw: &IDesktopWallpaper, monitors: &Vec<Monitor>, args: &[String]) -> Result<()> {

@@ -1,7 +1,5 @@
 use windows::core::Result;
-use windows::Win32::System::Com::{
-	CoCreateInstance, CoInitializeEx, CLSCTX_ALL, COINIT_MULTITHREADED,
-};
+use windows::Win32::System::Com::{CoCreateInstance, CoInitializeEx, CLSCTX_ALL, COINIT_MULTITHREADED};
 use windows::Win32::UI::Shell::{DesktopWallpaper, IDesktopWallpaper};
 
 mod helpers;

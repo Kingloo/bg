@@ -7,7 +7,7 @@ edition = "2018"
 rand = { version = "0.8.5", features = [ "std_rng" ] }
 
 [dependencies.windows]
-version = "0.33.0"
+version = "0.37.0"
 features = [
 	"Win32_Foundation",
 	"Win32_System_Com",

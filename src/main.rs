@@ -23,7 +23,7 @@ fn main() -> Result<()> {
 	let idw: IDesktopWallpaper;
 
 	unsafe {
-		CoInitializeEx(std::ptr::null_mut(), COINIT_MULTITHREADED)?;
+		CoInitializeEx(None, COINIT_MULTITHREADED)?;
 		idw = CoCreateInstance(&DesktopWallpaper, None, CLSCTX_LOCAL_SERVER)?;
 	}
 

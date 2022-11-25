@@ -67,8 +67,7 @@ fn get_slideshow_directory(idw: &IDesktopWallpaper, monitor: &Monitor) -> Option
 fn advance_slideshow(idw: &IDesktopWallpaper) -> Result<()> {
 	unsafe {
 		// monitor.monitor_id doesn't work here for second argument
-		// PWSTR::default() is the equivalent of NULL
-		IDesktopWallpaper::AdvanceSlideshow(idw, PCWSTR::default(), DSD_FORWARD)
+		IDesktopWallpaper::AdvanceSlideshow(idw, PCWSTR::null(), DSD_FORWARD)
 	}
 }
 

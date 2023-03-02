@@ -1,13 +1,13 @@
 [package]
 name = "bg"
-version = "1.4.0"
-edition = "2018"
+version = "1.5.0"
+edition = "2021"
 
 [dependencies]
 rand = { version = "0.8.5", features = [ "std_rng" ] }
 
 [dependencies.windows]
-version = "0.43.0"
+version = "0.44.0"
 features = [
 	"Win32_Foundation",
 	"Win32_System_Com",

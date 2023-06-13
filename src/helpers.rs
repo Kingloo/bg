@@ -25,8 +25,8 @@ pub fn get_monitors(idw: &IDesktopWallpaper) -> Result<Vec<Monitor>> {
 		let wallpaper = unsafe { IDesktopWallpaper::GetWallpaper(idw, PCWSTR(monitor_id.0))? };
 		monitors.push(Monitor {
 			index: i as usize,
-			monitor_id: monitor_id,
-			wallpaper: wallpaper,
+			monitor_id,
+			wallpaper,
 		})
 	}
 

@@ -57,5 +57,5 @@ pub fn set(idw: &IDesktopWallpaper, monitors: &Vec<Monitor>, args: &[String]) ->
 		}
 	}
 
-	return usage();
+	usage()
 }

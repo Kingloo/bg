@@ -32,10 +32,10 @@ fn main() -> Result<()> {
 	let command = args[1].as_str();
 	let command_args = &args[1..];
 
-	return match command {
+	match command {
 		"ls" => ls(&monitors, &command_args),
 		"set" => set(&idw, &monitors, &command_args),
 		"slideshow" => slideshow(&idw, &monitors, &command_args),
 		_ => usage(),
-	};
+	}
 }

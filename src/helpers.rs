@@ -1,4 +1,5 @@
 use crate::monitor::Monitor;
+use windows::Win32::Foundation::RECT;
 use windows::core::{Result, PCWSTR, PWSTR};
 use windows::Win32::UI::Shell::IDesktopWallpaper;
 
@@ -31,6 +32,16 @@ pub fn get_monitors(idw: &IDesktopWallpaper) -> Result<Vec<Monitor>> {
 	}
 
 	Ok(monitors)
+}
+
+pub fn get_attached_monitors(idw: &IDesktopWallpaper) -> Result<Vec<Monitor>> {
+	let monitors = get_monitors(idw)?;
+	let attached_monitors: Vec<Monitor> = monitors.into_iter().filter(|monitor| is_attached(idw, monitor).is_ok()).collect();
+	Ok(attached_monitors)
+}
+
+fn is_attached(idw: &IDesktopWallpaper, monitor: &Monitor) -> Result<RECT> {
+	unsafe { IDesktopWallpaper::GetMonitorRECT(idw, PCWSTR::from_raw(monitor.monitor_id.as_ptr())) }
 }
 
 pub trait IntoString {

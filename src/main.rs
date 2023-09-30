@@ -8,7 +8,7 @@ mod monitor;
 mod set;
 mod slideshow;
 
-use helpers::{get_monitors, usage};
+use helpers::{get_attached_monitors, usage};
 use ls::ls;
 use set::set;
 use slideshow::slideshow;
@@ -27,7 +27,7 @@ fn main() -> Result<()> {
 		idw = CoCreateInstance(&DesktopWallpaper, None, CLSCTX_LOCAL_SERVER)?;
 	}
 
-	let monitors = get_monitors(&idw)?;
+	let monitors = get_attached_monitors(&idw)?;
 
 	let command = args[1].as_str();
 	let command_args = &args[1..];

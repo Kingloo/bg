@@ -1,47 +1,19 @@
-use crate::monitor::Monitor;
 use windows::core::{Result, PCWSTR, PWSTR};
-use windows::Win32::Foundation::RECT;
-use windows::Win32::UI::Shell::IDesktopWallpaper;
 
 pub fn usage() -> Result<()> {
 	println!(
-		"usage:\n\
-	commands: ls, set, slideshow\n\
-	ls: list wallpapers on all monitors\n\
-	ls n: list wallpaper on monitor n\n\
-	set n {{path}}: sets wallpaper of monitor n to path\n\
-	set n random {{directory}}: sets wallpaper of monitor n to a random image from directory\n\
-	slideshow advance: advance slideshow to next wallpaper"
+		"USAGE\n\n\
+	COMMANDS\t\t\tls, set, slideshow\n\n\
+	ls\t\t\t\tlist wallpapers on attached monitors\n\
+	ls n\t\t\t\tlist wallpaper on monitor at index n\n\
+	ls all\t\t\t\tlist wallpapers on all monitors\n\n\
+	set n {{path}}\t\t\tsets wallpaper of monitor n to path\n\
+	set n random {{directory}}\tsets wallpaper of monitor n to a random image from directory\n\n\
+	slideshow\t\t\tshow details of wallpaper slideshow\n\
+	slideshow advance\t\tadvance slideshow to next wallpaper\n\
+	"
 	);
 	Ok(())
-}
-
-pub fn get_monitors(idw: &IDesktopWallpaper) -> Result<Vec<Monitor>> {
-	let mut monitors = Vec::new();
-
-	let monitor_count = unsafe { IDesktopWallpaper::GetMonitorDevicePathCount(idw)? };
-
-	for i in 0..monitor_count {
-		let monitor_id = unsafe { IDesktopWallpaper::GetMonitorDevicePathAt(idw, i)? };
-		let wallpaper = unsafe { IDesktopWallpaper::GetWallpaper(idw, PCWSTR(monitor_id.0))? };
-		monitors.push(Monitor {
-			index: i as usize,
-			monitor_id,
-			wallpaper,
-		})
-	}
-
-	Ok(monitors)
-}
-
-pub fn get_attached_monitors(idw: &IDesktopWallpaper) -> Result<Vec<Monitor>> {
-	let monitors = get_monitors(idw)?;
-	let attached_monitors: Vec<Monitor> = monitors.into_iter().filter(|monitor| is_attached(idw, monitor).is_ok()).collect();
-	Ok(attached_monitors)
-}
-
-fn is_attached(idw: &IDesktopWallpaper, monitor: &Monitor) -> Result<RECT> {
-	unsafe { IDesktopWallpaper::GetMonitorRECT(idw, PCWSTR::from_raw(monitor.monitor_id.as_ptr())) }
 }
 
 pub trait IntoString {

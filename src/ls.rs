@@ -12,17 +12,12 @@ fn print_monitor(monitor: &Monitor) {
 	println!();
 }
 
-fn print_monitors(monitors: &Vec<Monitor>) {
-	for each in monitors {
-		print_monitor(each)
-	}
+fn print_monitors(monitors: &[Monitor]) {
+	monitors.iter().for_each(print_monitor)
 }
 
-fn print_attached_monitors(monitors: &Vec<Monitor>) {
-	let attached_monitors: Vec<&Monitor> = monitors.into_iter().filter(|monitor| monitor.is_attached).collect();
-	for each in attached_monitors {
-		print_monitor(each)
-	}
+fn print_attached_monitors(monitors: &[Monitor]) {
+	monitors.iter().filter(|monitor| monitor.is_attached).for_each(print_monitor)
 }
 
 pub fn ls(monitors: &Vec<Monitor>, args: &[String]) -> Result<()> {

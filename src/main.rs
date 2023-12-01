@@ -34,9 +34,9 @@ fn main() -> Result<()> {
 	let command_args = &args[1..];
 
 	match command {
-		"ls" => ls(&monitors, &command_args),
-		"set" => set(&idw, &monitors, &command_args),
-		"slideshow" => slideshow(&idw, &monitors, &command_args),
+		"ls" => ls(&monitors, command_args),
+		"set" => set(&idw, &monitors, command_args),
+		"slideshow" => slideshow(&idw, &monitors, command_args),
 		_ => usage(),
 	}
 }

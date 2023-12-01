@@ -6,7 +6,7 @@ use windows::Win32::UI::Shell::{
 	IDesktopWallpaper, DESKTOP_SLIDESHOW_OPTIONS, DESKTOP_SLIDESHOW_STATE, DSD_FORWARD, DSO_SHUFFLEIMAGES, DSS_ENABLED, DSS_SLIDESHOW,
 };
 
-fn show_slideshow_details(idw: &IDesktopWallpaper, monitors: &Vec<Monitor>) -> Result<()> {
+fn show_slideshow_details(idw: &IDesktopWallpaper, monitors: &[Monitor]) -> Result<()> {
 	let mut slideshow_options: DESKTOP_SLIDESHOW_OPTIONS = DESKTOP_SLIDESHOW_OPTIONS(0);
 	let mut tick: u32 = 0;
 	let slideshow_options_ptr: *mut DESKTOP_SLIDESHOW_OPTIONS = &mut slideshow_options;
@@ -38,7 +38,7 @@ fn is_slideshow_shuffle(options: DESKTOP_SLIDESHOW_OPTIONS) -> bool {
 }
 
 fn get_slideshow_tick_in_minutes(tick: &u32) -> f32 {
-	(tick.clone() as f32 / 1000f32) / 60f32
+	(*tick as f32 / 1000f32) / 60f32
 }
 
 fn get_slideshow_directory(idw: &IDesktopWallpaper, monitor: &Monitor) -> Option<PathBuf> {
@@ -61,7 +61,7 @@ fn get_slideshow_directory(idw: &IDesktopWallpaper, monitor: &Monitor) -> Option
 		}
 	}
 
-	return None;
+	None
 }
 
 fn advance_slideshow(idw: &IDesktopWallpaper) -> Result<()> {
@@ -71,7 +71,7 @@ fn advance_slideshow(idw: &IDesktopWallpaper) -> Result<()> {
 	}
 }
 
-pub fn slideshow(idw: &IDesktopWallpaper, monitors: &Vec<Monitor>, args: &[String]) -> Result<()> {
+pub fn slideshow(idw: &IDesktopWallpaper, monitors: &[Monitor], args: &[String]) -> Result<()> {
 	let slideshow_state = unsafe { IDesktopWallpaper::GetStatus(idw)? };
 
 	if is_slideshow(slideshow_state) {

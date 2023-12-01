@@ -12,7 +12,7 @@ fn set_wallpaper(idw: &IDesktopWallpaper, monitor: &Monitor, path: &Path) -> Res
 }
 
 fn set_random_wallpaper(idw: &IDesktopWallpaper, monitor: &Monitor, path: &Path) -> Result<()> {
-	let random_image_path = get_random_image(&path);
+	let random_image_path = get_random_image(path);
 	set_wallpaper(idw, monitor, &random_image_path)
 }
 
@@ -40,7 +40,7 @@ fn is_valid_extension(extension: Option<&OsStr>) -> bool {
 	extension.is_some() && ["jpg", "jpeg", "png"].iter().any(|ext| ext == &extension.unwrap())
 }
 
-pub fn set(idw: &IDesktopWallpaper, monitors: &Vec<Monitor>, args: &[String]) -> Result<()> {
+pub fn set(idw: &IDesktopWallpaper, monitors: &[Monitor], args: &[String]) -> Result<()> {
 	if args.len() < 2 {
 		return usage();
 	}
@@ -53,7 +53,7 @@ pub fn set(idw: &IDesktopWallpaper, monitors: &Vec<Monitor>, args: &[String]) ->
 		let path = Path::new(&args[2]);
 
 		if path.exists() {
-			return set_wallpaper(idw, &monitors[idx], &path);
+			return set_wallpaper(idw, &monitors[idx], path);
 		}
 	}
 

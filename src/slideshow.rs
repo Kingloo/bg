@@ -51,12 +51,10 @@ fn get_slideshow_directory(idw: &IDesktopWallpaper, monitor: &Monitor) -> Option
 
 	let path = Path::new(&wallpaper_string);
 
-	if path.exists() {
-		if path.is_file() {
-			if let Some(dir) = path.parent() {
-				if dir.is_dir() {
-					return Some(dir.to_path_buf());
-				}
+	if path.exists() && path.is_file() {
+		if let Some(dir) = path.parent() {
+			if dir.is_dir() {
+				return Some(dir.to_path_buf());
 			}
 		}
 	}

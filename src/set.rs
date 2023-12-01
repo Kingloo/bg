@@ -19,8 +19,7 @@ fn set_random_wallpaper(idw: &IDesktopWallpaper, monitor: &Monitor, path: &Path)
 fn get_random_image(path: &Path) -> PathBuf {
 	let files: Vec<PathBuf> = std::fs::read_dir(path)
 		.unwrap()
-		.filter(|entry| entry.is_ok())
-		.map(|entry| entry.expect("failed to turn Ok<DirEntry> into DirEntry"))
+		.filter_map(|entry| entry.ok())
 		.map(|entry| entry.path()) // turn DirEntry into PathBuf
 		.filter(|path| path.is_file())
 		.filter(|file| is_valid_extension(file.extension()))

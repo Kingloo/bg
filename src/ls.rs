@@ -13,8 +13,8 @@ fn print_monitor(monitor: &Monitor) {
 }
 
 fn print_monitors(monitors: &Vec<Monitor>) {
-	for i in 0..monitors.len() {
-		print_monitor(&monitors[i])
+	for each in monitors {
+		print_monitor(each)
 	}
 }
 

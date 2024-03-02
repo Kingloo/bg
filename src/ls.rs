@@ -24,7 +24,7 @@ pub fn ls(monitors: &Vec<Monitor>, args: &[String]) -> Result<()> {
 	match args.len() {
 		1 => {
 			print_attached_monitors(monitors);
-		},
+		}
 		i if i > 1 => {
 			if let Ok(monitor_index) = args[1].parse::<usize>() {
 				if monitor_index < monitors.len() {
@@ -37,8 +37,8 @@ pub fn ls(monitors: &Vec<Monitor>, args: &[String]) -> Result<()> {
 			} else {
 				return usage();
 			}
-		},
-		_ => panic!("args passed to ls had a negative .len()")
+		}
+		_ => panic!("args passed to ls had a negative .len()"),
 	}
 
 	Ok(())

@@ -1,4 +1,3 @@
-use windows::core::Result;
 use windows::Win32::System::Com::{CoCreateInstance, CoInitializeEx, CLSCTX_LOCAL_SERVER, COINIT_MULTITHREADED};
 use windows::Win32::UI::Shell::{DesktopWallpaper, IDesktopWallpaper};
 
@@ -14,7 +13,7 @@ use monitor::get_monitors;
 use set::set;
 use slideshow::slideshow;
 
-fn main() -> Result<()> {
+fn main() -> windows::core::Result<()> {
 	let args: Vec<String> = std::env::args().collect();
 
 	if args.len() < 2 {
@@ -24,7 +23,7 @@ fn main() -> Result<()> {
 	let idw: IDesktopWallpaper;
 
 	unsafe {
-		CoInitializeEx(None, COINIT_MULTITHREADED)?;
+		CoInitializeEx(None, COINIT_MULTITHREADED).ok()?;
 		idw = CoCreateInstance(&DesktopWallpaper, None, CLSCTX_LOCAL_SERVER)?;
 	}
 

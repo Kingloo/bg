@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use windows::core::{Result, PCWSTR, PWSTR};
 use windows::Win32::UI::Shell::IDesktopWallpaper;
 
@@ -7,6 +9,22 @@ pub struct Monitor {
 	pub monitor_id: PWSTR,
 	pub wallpaper: PWSTR,
 	pub is_attached: bool,
+}
+
+impl Monitor {
+	pub fn monitor_id_to_string(&self) -> String {
+		match unsafe { self.monitor_id.to_string() } {
+			Ok(id) => id,
+			Err(e) => format!("failed: {}", e.to_string()),
+		}
+	}
+
+	pub fn wallpaper_to_pathbuf(&self) -> Option<PathBuf> {
+		match unsafe { self.wallpaper.to_string() } {
+			Ok(wallpaper) => Some(PathBuf::from(wallpaper)),
+			Err(_) => None,
+		}
+	}
 }
 
 pub fn get_monitors(idw: &IDesktopWallpaper) -> Result<Vec<Monitor>> {

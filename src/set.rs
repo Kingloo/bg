@@ -1,4 +1,4 @@
-use crate::helpers::{usage, IntoPCWSTR};
+use crate::helpers::usage;
 use crate::monitor::Monitor;
 use rand::{thread_rng, Rng};
 use std::ffi::OsStr;
@@ -8,7 +8,7 @@ use windows::Win32::UI::Shell::IDesktopWallpaper;
 
 fn set_wallpaper(idw: &IDesktopWallpaper, monitor: &Monitor, path: &Path) -> Result<()> {
 	let full_path = format!("{}", path.display());
-	unsafe { IDesktopWallpaper::SetWallpaper(idw, PCWSTR(monitor.monitor_id.0), full_path.into_pcwstr()) }
+	unsafe { IDesktopWallpaper::SetWallpaper(idw, PCWSTR(monitor.monitor_id.0), PCWSTR(full_path.as_ptr() as *const u16)) }
 }
 
 fn set_random_wallpaper(idw: &IDesktopWallpaper, monitor: &Monitor, path: &Path) -> Result<()> {

@@ -1,11 +1,17 @@
-use crate::helpers::{usage, IntoString};
+use crate::helpers::usage;
 use crate::monitor::Monitor;
 use windows::core::Result;
 
 fn print_monitor(monitor: &Monitor) {
 	println!("{}", monitor.index);
-	println!("\tid\t\t{}", monitor.monitor_id.into_string());
-	println!("\twallpaper\t{}", monitor.wallpaper.into_string());
+	println!("\tid\t\t{}", monitor.monitor_id_to_string());
+	println!(
+		"\twallpaper\t{}",
+		match monitor.wallpaper_to_pathbuf() {
+			Some(wallpaper) => wallpaper.display().to_string(),
+			None => format!("failed to get wallpaper path for '{}'", monitor.monitor_id_to_string()),
+		}
+	);
 	if !monitor.is_attached {
 		println!("\tis attached\tfalse")
 	}

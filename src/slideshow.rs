@@ -1,7 +1,6 @@
-use crate::helpers::IntoString;
 use crate::monitor::Monitor;
-use std::path::{Path, PathBuf};
-use windows::core::{Result, PCWSTR, PWSTR};
+use std::path::PathBuf;
+use windows::core::{Result, PCWSTR};
 use windows::Win32::UI::Shell::{
 	IDesktopWallpaper, DESKTOP_SLIDESHOW_OPTIONS, DESKTOP_SLIDESHOW_STATE, DSD_FORWARD, DSO_SHUFFLEIMAGES, DSS_ENABLED, DSS_SLIDESHOW,
 };
@@ -19,9 +18,9 @@ fn show_slideshow_details(idw: &IDesktopWallpaper, monitors: &[Monitor]) -> Resu
 	println!("shuffle\t\t{}", is_slideshow_shuffle(slideshow_options));
 	println!("duration\t{} mins", get_slideshow_tick_in_minutes(&tick));
 
-	let slideshow_directory = match get_slideshow_directory(idw, &monitors[0]) {
+	let slideshow_directory = match get_slideshow_directory(&monitors[0]) {
 		Some(dir) => format!("{}", dir.display()),
-		None => String::from("directory not found"),
+		None => format!("failed to get slideshow directory for '{}'", &monitors[0].monitor_id_to_string()),
 	};
 
 	println!("directory\t{}", slideshow_directory);
@@ -41,25 +40,20 @@ fn get_slideshow_tick_in_minutes(tick: &u32) -> f32 {
 	(*tick as f32 / 1000f32) / 60f32
 }
 
-fn get_slideshow_directory(idw: &IDesktopWallpaper, monitor: &Monitor) -> Option<PathBuf> {
-	let wallpaper: Result<PWSTR> = unsafe { IDesktopWallpaper::GetWallpaper(idw, PCWSTR(monitor.wallpaper.0)) };
-
-	let wallpaper_string = match wallpaper {
-		Ok(pwstr) => pwstr.into_string(),
-		Err(_) => String::default(),
-	};
-
-	let path = Path::new(&wallpaper_string);
-
-	if path.exists() && path.is_file() {
-		if let Some(dir) = path.parent() {
-			if dir.is_dir() {
-				return Some(dir.to_path_buf());
+fn get_slideshow_directory(monitor: &Monitor) -> Option<PathBuf> {
+	match monitor.wallpaper_to_pathbuf() {
+		Some(path) => {
+			if path.exists() && path.is_file() {
+				match path.parent() {
+					Some(parent) => Some(parent.to_path_buf()),
+					None => None,
+				}
+			} else {
+				None
 			}
 		}
+		None => None,
 	}
-
-	None
 }
 
 fn advance_slideshow(idw: &IDesktopWallpaper) -> Result<()> {

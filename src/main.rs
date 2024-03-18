@@ -1,17 +1,17 @@
 use windows::Win32::System::Com::{CoCreateInstance, CoInitializeEx, CLSCTX_LOCAL_SERVER, COINIT_MULTITHREADED};
 use windows::Win32::UI::Shell::{DesktopWallpaper, IDesktopWallpaper};
 
-mod helpers;
 mod ls;
 mod monitor;
 mod set;
 mod slideshow;
+mod usage;
 
-use helpers::usage;
 use ls::ls;
 use monitor::get_monitors;
 use set::set;
 use slideshow::slideshow;
+use usage::usage;
 
 fn main() -> windows::core::Result<()> {
 	let args: Vec<String> = std::env::args().collect();

@@ -1,5 +1,5 @@
-use crate::helpers::usage;
 use crate::monitor::Monitor;
+use crate::usage::usage;
 use rand::{thread_rng, Rng};
 use std::ffi::OsStr;
 use std::path::{Path, PathBuf};

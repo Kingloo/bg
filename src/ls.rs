@@ -26,7 +26,7 @@ fn print_attached_monitors(monitors: &[Monitor]) {
 	monitors.iter().filter(|monitor| monitor.is_attached).for_each(print_monitor)
 }
 
-pub fn ls(monitors: &Vec<Monitor>, args: &[String]) -> Result<()> {
+pub fn ls(monitors: &[Monitor], args: &[String]) -> Result<()> {
 	match args.len() {
 		1 => {
 			print_attached_monitors(monitors);

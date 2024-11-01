@@ -15,7 +15,7 @@ impl Monitor {
 	pub fn monitor_id_to_string(&self) -> String {
 		match unsafe { self.monitor_id.to_string() } {
 			Ok(id) => id,
-			Err(e) => format!("failed: {}", e.to_string()),
+			Err(e) => format!("failed: {}", e),
 		}
 	}
 

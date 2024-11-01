@@ -44,10 +44,7 @@ fn get_slideshow_directory(monitor: &Monitor) -> Option<PathBuf> {
 	match monitor.wallpaper_to_pathbuf() {
 		Some(path) => {
 			if path.exists() && path.is_file() {
-				match path.parent() {
-					Some(parent) => Some(parent.to_path_buf()),
-					None => None,
-				}
+				path.parent().map(|parent| parent.to_path_buf())
 			} else {
 				None
 			}

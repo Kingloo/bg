@@ -1,9 +1,9 @@
 use crate::monitor::Monitor;
 use std::path::PathBuf;
-use windows::core::{Result, PCWSTR};
 use windows::Win32::UI::Shell::{
-	IDesktopWallpaper, DESKTOP_SLIDESHOW_OPTIONS, DESKTOP_SLIDESHOW_STATE, DSD_FORWARD, DSO_SHUFFLEIMAGES, DSS_ENABLED, DSS_SLIDESHOW,
+	DESKTOP_SLIDESHOW_OPTIONS, DESKTOP_SLIDESHOW_STATE, DSD_FORWARD, DSO_SHUFFLEIMAGES, DSS_ENABLED, DSS_SLIDESHOW, IDesktopWallpaper,
 };
+use windows::core::{PCWSTR, Result};
 
 fn show_slideshow_details(idw: &IDesktopWallpaper, monitors: &[Monitor]) -> Result<()> {
 	let mut slideshow_options: DESKTOP_SLIDESHOW_OPTIONS = DESKTOP_SLIDESHOW_OPTIONS(0);

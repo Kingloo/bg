@@ -1,10 +1,10 @@
 use crate::monitor::Monitor;
 use crate::usage::usage;
-use rand::{thread_rng, Rng};
+use rand::{Rng, thread_rng};
 use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
-use windows::core::{Result, PCWSTR};
 use windows::Win32::UI::Shell::IDesktopWallpaper;
+use windows::core::{PCWSTR, Result};
 
 fn set_wallpaper(idw: &IDesktopWallpaper, monitor: &Monitor, path: &Path) -> Result<()> {
 	let full_path = format!("{}", path.display());

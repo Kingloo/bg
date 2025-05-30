@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
-use windows::core::{Result, PCWSTR, PWSTR};
 use windows::Win32::UI::Shell::IDesktopWallpaper;
+use windows::core::{PCWSTR, PWSTR, Result};
 
 #[derive(Debug)]
 pub struct Monitor {

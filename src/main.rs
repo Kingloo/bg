@@ -1,4 +1,4 @@
-use windows::Win32::System::Com::{CoCreateInstance, CoInitializeEx, CLSCTX_LOCAL_SERVER, COINIT_MULTITHREADED};
+use windows::Win32::System::Com::{CLSCTX_LOCAL_SERVER, COINIT_MULTITHREADED, CoCreateInstance, CoInitializeEx};
 use windows::Win32::UI::Shell::{DesktopWallpaper, IDesktopWallpaper};
 
 mod ls;
@@ -20,12 +20,11 @@ fn main() -> windows::core::Result<()> {
 		return usage();
 	}
 
-	let idw: IDesktopWallpaper;
-
 	unsafe {
 		CoInitializeEx(None, COINIT_MULTITHREADED).ok()?;
-		idw = CoCreateInstance(&DesktopWallpaper, None, CLSCTX_LOCAL_SERVER)?;
 	}
+
+	let idw: IDesktopWallpaper = unsafe { CoCreateInstance(&DesktopWallpaper, None, CLSCTX_LOCAL_SERVER)? };
 
 	let monitors = get_monitors(&idw)?;
 

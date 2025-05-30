@@ -1,7 +1,7 @@
 [package]
 name = "bg"
-version = "1.15.0"
-edition = "2021"
+version = "1.16.0"
+edition = "2024"
 
 [dependencies]
 rand = { version = "0.8", features = [ "std_rng" ] }

@@ -36,7 +36,7 @@ pub fn ls(monitors: &[Monitor], args: &[String]) -> Result<()> {
 				if monitor_index < monitors.len() {
 					print_monitor(&monitors[monitor_index]);
 				} else {
-					eprintln!("no monitor at index {}", monitor_index);
+					eprintln!("no monitor at index {monitor_index}");
 				}
 			} else if args[1] == "all" {
 				print_monitors(monitors);

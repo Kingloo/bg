@@ -23,7 +23,7 @@ fn show_slideshow_details(idw: &IDesktopWallpaper, monitors: &[Monitor]) -> Resu
 		None => format!("failed to get slideshow directory for '{}'", &monitors[0].monitor_id_to_string()),
 	};
 
-	println!("directory\t{}", slideshow_directory);
+	println!("directory\t{slideshow_directory}");
 
 	Ok(())
 }
@@ -70,7 +70,7 @@ pub fn slideshow(idw: &IDesktopWallpaper, monitors: &[Monitor], args: &[String])
 			return show_slideshow_details(idw, monitors);
 		}
 	} else {
-		println!("not a slideshow")
+		eprintln!("not a slideshow")
 	}
 
 	Ok(())

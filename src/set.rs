@@ -1,6 +1,6 @@
 use crate::monitor::Monitor;
 use crate::usage::usage;
-use rand::{Rng, thread_rng};
+use rand::{Rng, rng};
 use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
 use windows::Win32::UI::Shell::IDesktopWallpaper;
@@ -29,9 +29,9 @@ fn get_random_image(path: &Path) -> PathBuf {
 		[file] => file.clone(),
 		[] => PathBuf::new(),
 		_ => {
-			let random_index = thread_rng().gen_range(0..files.len() - 1);
+			let random_index = rng().random_range(0..files.len() - 1);
 			files[random_index].clone()
-		} 
+		}
 	}
 }
 

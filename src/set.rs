@@ -25,13 +25,13 @@ fn get_random_image(path: &Path) -> PathBuf {
 		.filter(|file| is_valid_extension(file.extension()))
 		.collect();
 
-	match files.len() {
-		0 => PathBuf::new(),
-		1 => files[0].clone(),
+	match files.as_slice() {
+		[file] => file.clone(),
+		[] => PathBuf::new(),
 		_ => {
 			let random_index = thread_rng().gen_range(0..files.len() - 1);
 			files[random_index].clone()
-		}
+		} 
 	}
 }
 
